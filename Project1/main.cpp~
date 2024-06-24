@@ -1,0 +1,45 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unistd.h>
+using namespace std;
+
+
+int main()
+{
+  string A = ""; // Input File name
+  string B = ""; // Output File Name
+  int n = 0; // num of input elements
+  int m = 0; // num of cores for process
+
+  cout << "Input File Name?: ";
+  cin >> A;
+  cout << "Output File Name?: ";
+  cin >> B;
+  cout << "Number of elements being put in Array?: ";
+  cin >> n;
+  const int p = n;
+  cout << "Number of cores desired for process?: ";
+  cin >> m;
+
+
+
+  int arr[p];
+  string line = "";
+  ifstream newFile(A);
+  int cnt = 0;
+  int x;
+  if(newFile.is_open())
+    {
+      while (cnt < arr[p] && newFile >> x)
+	{
+	 arr[cnt++] = x;
+	}
+      newFile.close();
+    }
+  else cout << "Unable to open file";
+
+
+
+  return 0;
+}
