@@ -6,6 +6,9 @@
 
 using namespace std;
 inline bool file_exists (const std::string& name);
+void hAndSAlgo (int arr[], int n);
+bool barrier(int arr[], int n);
+
 
 int main()
 {
@@ -65,6 +68,7 @@ int main()
 
 //3. generate m processes to handle the algorithm
 
+
   
 //4. run the algorithms
 
@@ -75,10 +79,18 @@ int main()
   return 0;
 }
 //*6. Hillis and Steele Algorithm
+void hAndSAlgo (int arr[], int n){
 
+}
 
 //*7. Barrier Algorithm
+bool barrier(int arr[], int n){
+  const int x = n;
+  bool guardTwo[x] = {false} ;
+  int cnt = 0;
 
+  return guardTwo[];
+}
 
 inline bool file_exists (const std::string& name) {
   struct stat buffer;   

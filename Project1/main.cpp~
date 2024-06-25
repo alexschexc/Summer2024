@@ -2,11 +2,14 @@
 #include <fstream>
 #include <string>
 #include <unistd.h>
-using namespace std;
+#include <sys/stat.h>
 
+using namespace std;
+inline bool file_exists (const std::string& name);
 
 int main()
 {
+//1. Create variable and take in arguments
   string A = ""; // Input File name
   string B = ""; // Output File Name
   int n = 0; // num of input elements
@@ -14,16 +17,35 @@ int main()
 
   cout << "Input File Name?: ";
   cin >> A;
+  if(!file_exists(A)){
+    cout << "ERROR File does not exist!";
+    exit(0);
+  }
+
   cout << "Output File Name?: ";
   cin >> B;
+  if(!file_exists(B)){
+    cout << "ERROR File does not exist!";
+    exit(0);
+  }
+
   cout << "Number of elements being put in Array?: ";
   cin >> n;
+  if (n <= 0) {
+   cout << "ERROR value less than 0 (zero)";
+   exit(0);
+  } 
   const int p = n;
+
   cout << "Number of cores desired for process?: ";
   cin >> m;
+  if (m <= 0) {
+   cout << "ERROR value less than 0 (zero)";
+   exit(0); 
+  }
 
 
-
+//2. populate entry array
   int arr[p];
   string line = "";
   ifstream newFile(A);
@@ -39,7 +61,26 @@ int main()
     }
   else cout << "Unable to open file";
 
+  // arr[] should now be populated
+
+//3. generate m processes to handle the algorithm
+
+  
+//4. run the algorithms
+
+
+//5. output results
 
 
   return 0;
+}
+//*6. Hillis and Steele Algorithm
+
+
+//*7. Barrier Algorithm
+
+
+inline bool file_exists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
 }
