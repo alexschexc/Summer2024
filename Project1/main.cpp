@@ -61,15 +61,15 @@ int main()
   int cnt = 0;
   int x;
   if(newFile.is_open())
+  {
+    while (cnt < arr[p] && newFile >> x)
     {
-      while (cnt < arr[p] && newFile >> x)
-	{
-	 arr[cnt++] = x;
-	}
-      newFile.close();
+      arr[cnt++] = x;
     }
+    newFile.close();
+  }
   else cout << "Unable to open file";
-
+  //assign arr a 
   // arr[] should now be populated
 
 //3. generate m processes to handle the algorithm
@@ -85,13 +85,17 @@ int main()
   return 0;
 }
 //*6. Hillis and Steele Algorithm
-void hAndSAlgo (int id, int p, int i){
+void hAndSAlgo (int id, int p, int i)
+{
   
 }
 
 //*7. Barrier Algorithm
 //Method should be called arriveAndWait(), should be void and blocks the process
-void arriveAndWait()
+void arriveAndWait(int id) 
+{
+
+}
 /*bool barrier(int arr[], int n){
   const int x = n;
   bool guardTwo[x] = {false} ;
@@ -100,7 +104,8 @@ void arriveAndWait()
   return guardTwo[];
 }*/
 
-inline bool file_exists (const std::string& name) {
+inline bool file_exists (const std::string& name) 
+{
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
 }
