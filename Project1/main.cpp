@@ -9,9 +9,9 @@
 using namespace std;
 
 //Since you already did namespace std; it should just be string not std::string
-inline bool file_exists (const string& name);
+inline bool file_exists(const string& name);
 //Changed parameters to int id, int p, and int i based on pseudocode found in PDF
-void hAndSAlgo (int id, int p, int i);
+void hAndSAlgo(int id, int p, int i);
 bool barrier(int arr[], int n);
 
 
@@ -61,15 +61,15 @@ int main()
   int cnt = 0;
   int x;
   if(newFile.is_open())
-  {
-    while (cnt < arr[p] && newFile >> x)
     {
-      arr[cnt++] = x;
+      while (cnt < arr[p] && newFile >> x)
+	{
+	 arr[cnt++] = x;
+	}
+      newFile.close();
     }
-    newFile.close();
-  }
   else cout << "Unable to open file";
-  //assign arr a 
+
   // arr[] should now be populated
 
 //3. generate m processes to handle the algorithm
@@ -82,20 +82,22 @@ int main()
 //5. output results
 
 
+inline bool file_exists (const string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+
+
   return 0;
 }
 //*6. Hillis and Steele Algorithm
-void hAndSAlgo (int id, int p, int i)
-{
+void hAndSAlgo (int id, int p, int i){
   
 }
 
 //*7. Barrier Algorithm
 //Method should be called arriveAndWait(), should be void and blocks the process
-void arriveAndWait(int id) 
-{
-
-}
+void arriveAndWait()
 /*bool barrier(int arr[], int n){
   const int x = n;
   bool guardTwo[x] = {false} ;
@@ -104,8 +106,4 @@ void arriveAndWait(int id)
   return guardTwo[];
 }*/
 
-inline bool file_exists (const std::string& name) 
-{
-  struct stat buffer;   
-  return (stat (name.c_str(), &buffer) == 0); 
-}
+
