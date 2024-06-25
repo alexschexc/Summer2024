@@ -11,7 +11,6 @@ inline bool file_exists(const string& name);
 void hAndSAlgo(int id, int p, int i);
 bool barrier(int arr[], int n);
 
-
 int main() {
   //1. Create variable and take in arguments
   string A = ""; // Input File name
@@ -43,7 +42,6 @@ int main() {
    cout << "ERROR value less than 0 (zero)";
    exit(0); 
   }
-  
 
   //2. populate entry array
   int arr[p];
@@ -60,18 +58,17 @@ int main() {
       newFile.close();
     }
   else cout << "Unable to open file";
-
   // arr[] should now be populated
 
   //3. generate m processes to handle the algorithm
+
   
   //4. run the algorithms
 
   //5. output results
   return 0;
-
-
 }
+
 inline bool file_exists (const string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
@@ -83,13 +80,5 @@ void hAndSAlgo (int id, int p, int i){
 }
 
 //*7. Barrier Algorithm
-//Method should be called arriveAndWait(), should be void and blocks the process
 void arriveAndWait(){
-/*bool barrier(int arr[], int n){
-  const int x = n;
-  bool guardTwo[x] = {false} ;
-  int cnt = 0;
-
-  return guardTwo[];
-}*/
-  }
+}
