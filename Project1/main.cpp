@@ -1,12 +1,17 @@
 #include <iostream>
 #include <fstream>
+//Added math library
+#include <cmath>
 #include <string>
 #include <unistd.h>
 #include <sys/stat.h>
 
 using namespace std;
-inline bool file_exists (const std::string& name);
-void hAndSAlgo (int arr[], int n);
+
+//Since you already did namespace std; it should just be string not std::string
+inline bool file_exists (const string& name);
+//Changed parameters to int id, int p, and int i based on pseudocode found in PDF
+void hAndSAlgo (int id, int p, int i);
 bool barrier(int arr[], int n);
 
 
@@ -27,10 +32,11 @@ int main()
 
   cout << "Output File Name?: ";
   cin >> B;
-  if(!file_exists(B)){
+  //Since it is an output file, it will not exist initially, removing the block of code
+  /*if(!file_exists(B)){
     cout << "ERROR File does not exist!";
     exit(0);
-  }
+  }*/
 
   cout << "Number of elements being put in Array?: ";
   cin >> n;
@@ -79,18 +85,20 @@ int main()
   return 0;
 }
 //*6. Hillis and Steele Algorithm
-void hAndSAlgo (int arr[], int n){
-
+void hAndSAlgo (int id, int p, int i){
+  
 }
 
 //*7. Barrier Algorithm
-bool barrier(int arr[], int n){
+//Method should be called arriveAndWait(), should be void and blocks the process
+void arriveAndWait()
+/*bool barrier(int arr[], int n){
   const int x = n;
   bool guardTwo[x] = {false} ;
   int cnt = 0;
 
   return guardTwo[];
-}
+}*/
 
 inline bool file_exists (const std::string& name) {
   struct stat buffer;   
