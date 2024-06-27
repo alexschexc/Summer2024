@@ -83,6 +83,13 @@ int main(void) {
   if ( segment_id < 0 ) errormsg( "ERROR in creating a shared memory segment\n" );
 
   fprintf( stdout, "Segment id = %d\n", segment_id );
+  
+  int *sharedArray;
+  
+  sharedArray = ;
+
+  memcpy ;
+
   //4. run the algorithms
 
   //5. output results
