@@ -26,9 +26,9 @@ void forkProcesses(int numForks,pid_t* shared_pid);
 
 
 int main(void) {
+  int debugLvl = 0;
 
-
-  //1. Create variable and take in arguments
+//## 1. Create variable and take in arguments ###############################
   string A = ""; // Input File name
   string B = ""; // Output File Name
   int n = 0; // num of input elements
@@ -58,7 +58,10 @@ int main(void) {
    cout << "ERROR value less than 0 (zero)";
    exit(1); 
   }
-// 1.5 Memory space Estimations:
+  cout << "Debug Level: ";
+  cin >> debugLvl;
+
+//## 1.5 Memory space Estimations: #########################################
 int processes = ceil( 1 + log2 (n));
 int a;
 int b;
@@ -67,8 +70,17 @@ b = m * sizeof(int);
 const int ARRAY_MEMORY_SIZE = a;
 const int BARRIER_MEMORY_SIZE = b;
 const int TOTAL_MEMORY_SIZE = ARRAY_MEMORY_SIZE + BARRIER_MEMORY_SIZE;
-
-  //2. populate entry array
+if(debugLvl >= 2 ){
+cout << "\nn: " << n << "\n";
+cout << "\nm: " << m << "\n";
+cout << "\nprocesses: " << processes << "\n";
+cout << "\na: " << a << "\n";
+cout << "\nb: " << b << "\n";
+cout << "\nArray Memory Size: " << ARRAY_MEMORY_SIZE << "\n";
+cout << "\nBarrier Memory Size: " << BARRIER_MEMORY_SIZE << "\n";
+cout << "\nTotal Memory Size: " << TOTAL_MEMORY_SIZE << "\n";
+}
+//## 2. populate entry array ###############################################
   int* arr = new int[p];
   string line = "";
   ifstream newFile(A);
@@ -89,7 +101,7 @@ const int TOTAL_MEMORY_SIZE = ARRAY_MEMORY_SIZE + BARRIER_MEMORY_SIZE;
   // this has been successfully tested with for loop cout output
 
 
-  //3. shared memory creation 
+//## 3. shared memory creation #############################################
   int* barrierArray = new int[m];
   for (int k = 0; k < m; k++){
     barrierArray[k] = 0;
@@ -99,20 +111,30 @@ const int TOTAL_MEMORY_SIZE = ARRAY_MEMORY_SIZE + BARRIER_MEMORY_SIZE;
   segment_id = shmget( IPC_PRIVATE, TOTAL_MEMORY_SIZE, S_IRUSR | S_IWUSR );
 
   if ( segment_id < 0 ) errormsg( "ERROR in creating a shared memory segment\n" );
-
-  fprintf( stdout, "1st Segment id = %d\n", segment_id );
-  cout << 1;
+  cout << "\n" << 1 << "\n";
+  fprintf( stdout, "Segment id = %d\n", segment_id );
+if(debugLvl >= 2 ){
+  cout << "\n" << 2 << "\n";
+  cout << "\n" << TOTAL_MEMORY_SIZE << "\n";
+  errno = 0;}
   int *sharedArray = (int *)shmat(segment_id,NULL,0);
-  cout << 2;
+  
+if(debugLvl >= 2 ){
+  cout << "\n" << (void*)-1 << "\n";
+  perror("Failed to attach shared memory segment");
+  cout << "\nb: " << b << "\n";
+  cerr << "Error code: " << errno << endl; 
+  fprintf( stdout, "Pointer = %d\n", sharedArray);
+  cout << 3;
+}
   if (sharedArray == (void*)-1) {
-    cerr << "Failed to Attach memory segment.\n";
-    shmctl(segment_id, IPC_RMID, NULL);
+    perror("Failed to Attach memory segment.\n");
+    shmctl(segment_id,IPC_RMID,NULL);
     exit(1); 
   }
-  cout << "hello";
 
   memcpy(sharedArray, arr, ARRAY_MEMORY_SIZE);
-  memcpy((int*)((char*)sharedArray) + ARRAY_MEMORY_SIZE, barrierArray, BARRIER_MEMORY_SIZE);
+  memcpy(((char*)sharedArray) + ARRAY_MEMORY_SIZE, barrierArray, BARRIER_MEMORY_SIZE);
  
   int* sharedAlgoArray = sharedArray;
   int* sharedBarrArray = (int*)((char*)sharedArray + ARRAY_MEMORY_SIZE);
@@ -130,7 +152,7 @@ const int TOTAL_MEMORY_SIZE = ARRAY_MEMORY_SIZE + BARRIER_MEMORY_SIZE;
   cout << endl;
 
   int cores;
-  //4. generate m processes to handle the algorithm
+//## 4. generate m processes to handle the algorithm #######################
   if(n == m){ // same number of cores and elements
     cores = m;
     forkProcesses(cores,sharedArray);
@@ -152,53 +174,43 @@ const int TOTAL_MEMORY_SIZE = ARRAY_MEMORY_SIZE + BARRIER_MEMORY_SIZE;
     }
   }
 
-  //5. run the algorithms
+//## 5. run the algorithms #################################################
 
-  //6. output results
+  
+
+
+//## 6. output results #####################################################
   return 0;
 }
-void errormsg( char *msg ) {
-   perror( msg );
-   exit(1);
-}
-inline bool file_exists (const string& name) {
-  struct stat buffer;   
-  return (stat (name.c_str(), &buffer) == 0); 
-}
+//## *7. Hillis and Steele Algorithm #######################################
+void hAndSAlgo (int n, int** arr){
+int x = ceil(log2(n));  // algorithm 'n' == processes
 
-//*7. Hillis and Steele Algorithm
-void hAndSAlgo (int id, int processes, int (&arr)[]){
-int n = ceil(log2(processes));
-
-
-for(int p = 1;p <= n; p++){
- for(int i = 0; i < n;){
+for(int p = 1;p <= x; p++){
+ for(int i = 0; i < n; i++){
    if(i < pow(2, p-1)){
-     arr[i] = arr [p-1];
+     arr[p][i] = arr [p-1][i];
    }
    else{
-     int a;
-     a = pow(2, p-1);
-     arr[p] = arr[p-1] + arr[p-1]; //[i-a]
+     int y = pow(2, p-1);
+     arr[p][i] = arr[p-1][i-y] + arr[p-1][i];
    }
-
- }
+  }
  }
 }
 
-//*8. Barrier Algorithm
-int arriveAndWait(int *arr, int p, int cnt){
+//## *8. Barrier Algorithm #################################################
+int arriveAndWait(int *barrArray, int p, int m){
   int status;
   for (int i = 0; i < p; i++){
-    if (arr[i] < cnt) {
+    if (barrArray[i] < m) { // m == cnt
       wait(&status);
     }
-  }
-  
-  return *arr;
+  } 
+  return *barrArray;
 }
 
-//* Process forking function
+//## *Process forking function #############################################
 void forkProcesses(int numForks, pid_t* shared_pid) {
     for (int i = 0; i < numForks; ++i) {
         pid_t pid = fork();
@@ -219,4 +231,11 @@ void forkProcesses(int numForks, pid_t* shared_pid) {
         }
     }
 }
-
+void errormsg( char *msg ) {
+   perror( msg );
+   exit(1);
+}
+inline bool file_exists (const string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
