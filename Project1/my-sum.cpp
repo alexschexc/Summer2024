@@ -19,10 +19,10 @@ using namespace std;
 
 
 inline bool file_exists(const string& name);
-void hAndSAlgo (int id, int processes, int (&arr)[]);
-bool arriveAndWait(bool arr[], int p);
+void hAndSAlgo (int child_id, int m, int n, int** arr, int* barrArray);
+int arriveAndWait(int arr[], int m, int child_id);
 void errormsg( char *msg );
-void forkProcesses(int numForks,pid_t* shared_pid); 
+void forkProcesses(int n,int numForks,pid_t* shared_pid,int** algoArray,int* barrArray); 
 
 
 int main(void) {
@@ -100,7 +100,6 @@ cout << "\nTotal Memory Size: " << TOTAL_MEMORY_SIZE << "\n";
   // arr[] should now be populated
   // this has been successfully tested with for loop cout output
 
-
 //## 3. shared memory creation #############################################
   int* barrierArray = new int[m];
   for (int k = 0; k < m; k++){
@@ -111,7 +110,7 @@ cout << "\nTotal Memory Size: " << TOTAL_MEMORY_SIZE << "\n";
   segment_id = shmget( IPC_PRIVATE, TOTAL_MEMORY_SIZE, S_IRUSR | S_IWUSR );
 
   if ( segment_id < 0 ) errormsg( "ERROR in creating a shared memory segment\n" );
-  cout << "\n" << 1 << "\n";
+if(debugLvl >= 2 )  cout << "\n" << 1 << "\n";
   fprintf( stdout, "Segment id = %d\n", segment_id );
 if(debugLvl >= 2 ){
   cout << "\n" << 2 << "\n";
@@ -133,86 +132,108 @@ if(debugLvl >= 2 ){
     exit(1); 
   }
 
-  memcpy(sharedArray, arr, ARRAY_MEMORY_SIZE);
+  memcpy(sharedArray, arr, p*sizeof(int));
   memcpy(((char*)sharedArray) + ARRAY_MEMORY_SIZE, barrierArray, BARRIER_MEMORY_SIZE);
  
-  int* sharedAlgoArray = sharedArray;
+  int** sharedAlgoArray = (int**)sharedArray;
   int* sharedBarrArray = (int*)((char*)sharedArray + ARRAY_MEMORY_SIZE);
-  
-  cout << "input array \n:";
+ 
+  cout << "arr " << arr << endl;
+  cout << "sharedArray " << sharedArray << endl;
+  cout << "sharedAlgoArray " << sharedAlgoArray << endl;
+  cout << "sharedBarrArray " << sharedBarrArray << endl;
+  cout << flush;
+ 
+/*  cout << "input array \n:";
   for (int i =0; i < n; i++){
-    cout << sharedAlgoArray[i] << " ";
+    cout << sharedAlgoArray[0][i] << " ";
   }
-  cout << endl;
+  cout << endl << flush;
   
   cout << "barrier array \n:";
-  for (int i =0; i < n; i++){
+  for (int i =0; i < m; i++){
     cout << sharedBarrArray[i] << " ";
   }
-  cout << endl;
+  cout << endl;*/
+  
 
-  int cores;
 //## 4. generate m processes to handle the algorithm #######################
+  int cores; // this will hold the needed number of processes to execute the algorithm
   if(n == m){ // same number of cores and elements
     cores = m;
-    forkProcesses(cores,sharedArray);
+    forkProcesses(n,cores,sharedArray,sharedAlgoArray,sharedBarrArray);
   }
   else if(n < m){ //more cores than elements
     cores = m - n; // reduce number of requested cores to number of needed cores for processing
-    forkProcesses(cores,sharedArray);
+    forkProcesses(n,cores,sharedArray,sharedAlgoArray,sharedBarrArray);
 
   }
   else{ // if n > m  i.e. there are more elements than cores
     if(n % m == 0){
-      cores = m; 
-      forkProcesses(cores,sharedArray);
+      cores = m;
+      cout << "\ncores:" << cores <<"\n";
+      forkProcesses(n,cores,sharedArray,sharedAlgoArray,sharedBarrArray);
     }
-    else if(n % m !=0){
+/*    else if(n  m ){
       cores = m; 
-      forkProcesses(cores,sharedArray);
+      forkProcesses(cores,sharedArray,sharedalgoarray,sharedbarrarray);
 
-    }
+    }*/
   }
+//cout << "\n" << 1 ;
+/*//## 5. run the algorithms #################################################
+hAndSAlgo(n, sharedAlgoArray);
 
-//## 5. run the algorithms #################################################
-
-  
 
 
-//## 6. output results #####################################################
+//## 6. output results #####################################################*/
   return 0;
 }
+
 //## *7. Hillis and Steele Algorithm #######################################
-void hAndSAlgo (int n, int** arr){
+void hAndSAlgo (int child_id, int m, int n, int** arr, int* barrArray){
+  
+int* arrnew = (int *) arr;
+
 int x = ceil(log2(n));  // algorithm 'n' == processes
+int arrSeg = n/m;
+int start = child_id * arrSeg;
+int end = (child_id == m -1) ? n : start + arrSeg;
 
 for(int p = 1;p <= x; p++){
- for(int i = 0; i < n; i++){
-   if(i < pow(2, p-1)){
-     arr[p][i] = arr [p-1][i];
-   }
-   else{
+  
+  for(int i = start; i < end; i++){ 
+    if(i < pow(2, p-1)){
+     *(arrnew + (p*n) + i) = *(arrnew + (p-1)*n + i);
+    }
+    else{
      int y = pow(2, p-1);
-     arr[p][i] = arr[p-1][i-y] + arr[p-1][i];
-   }
+     *(arrnew + p*n + i) = *(arrnew + (p-1)*n + (i-y)) + *(arrnew + (p-1)*n + i);
+    }
   }
+  arriveAndWait(barrArray,m,child_id); // calls the barrier array function
  }
+ 
+ for(int i = 0; i < n; ++i) {
+   cout << *(arrnew + (x*n) + i) << " ";
+ }
+ cout << endl;
+
 }
 
 //## *8. Barrier Algorithm #################################################
-int arriveAndWait(int *barrArray, int p, int m){
-  int status;
-  for (int i = 0; i < p; i++){
-    if (barrArray[i] < m) { // m == cnt
-      wait(&status);
+int arriveAndWait(int *barrArray, int m, int child_id) {
+  barrArray[child_id]++;
+  for(int i = 0;i < m;++i){
+    while(barrArray[i] < barrArray[child_id]);
     }
-  } 
+   
   return *barrArray;
 }
 
 //## *Process forking function #############################################
-void forkProcesses(int numForks, pid_t* shared_pid) {
-    for (int i = 0; i < numForks; ++i) {
+void forkProcesses(int n, int m, pid_t* shared_pid, int** algoArray, int* barrArray) {
+    for (int i = 0; i < m; ++i) {
         pid_t pid = fork();
 
         if (pid < 0) {
@@ -221,14 +242,14 @@ void forkProcesses(int numForks, pid_t* shared_pid) {
         } else if (pid == 0) {
             // Child process
             cout << "This is child process " << i << " with PID " << getpid() << " and previous PID " << *shared_pid << endl;
-
+	    hAndSAlgo(i,m,n,algoArray,barrArray);
             // Update the shared memory with the current child's PID
-            *shared_pid = getpid();
-            exit(1); // Exit to prevent child from forking again
-        } else {
-            // Parent process
-            wait(nullptr); // Wait for the child process to complete
+            _exit(0); // Exit to prevent child from forking again
         }
+	
+    }
+    for(int i = 0; i < m; ++i){
+      wait(NULL);
     }
 }
 void errormsg( char *msg ) {

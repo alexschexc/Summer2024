@@ -1,4 +1,4 @@
-CPP = g++
+CPP = g++ -g
 
 all: ACS200009PrefixSum
 
