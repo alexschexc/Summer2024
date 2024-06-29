@@ -187,6 +187,8 @@ hAndSAlgo(n, sharedAlgoArray);
 
 
 //## 6. output results #####################################################*/
+
+  shmctl(segment_id,IPC_RMID,NULL);
   return 0;
 }
 
@@ -213,9 +215,15 @@ for(int p = 1;p <= x; p++){
   }
   arriveAndWait(barrArray,m,child_id); // calls the barrier array function
  }
- 
- for(int i = 0; i < n; ++i) {
+
+/* for(int i = 0; i < n; ++i) {
    cout << *(arrnew + (x*n) + i) << " ";
+ } */
+
+// cout << "\n" << *(arrnew + (x*n) + (n-1)) << "\n";
+// cout << "\n" << n << "\n";
+ if(*(arrnew + (x*n) + (n-1)) == n){
+   cout << "\n YAY";
  }
  cout << endl;
 
