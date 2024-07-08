@@ -3,9 +3,9 @@
 
 
 using namespace std;
-void PAlTournTree(){}
-void TASLock(){}
-void FAILock(){}
+void PAlTournTree();
+void TASLock();
+void FAILock();
 
 int main(){
 
