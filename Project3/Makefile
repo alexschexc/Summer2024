@@ -1,12 +1,12 @@
 CPP = g++ -g
 
-all: ACS200009MyLock
+all: pipegrep
 
-ACS200009MyLock: *.o
+pipegrep: *.o
 	$(CPP) $^ -o $@
 
 *.o: *.cpp
 	$(CPP) -I. -c $^ -o $@
 
 clean:
-	rm -f ACS200009MyLock *.o
+	rm -f pipegrep *.o
