@@ -137,47 +137,81 @@ cout << "\nTotal Memory Size: " << TOTAL_MEMORY_SIZE << "\n";
 
 //## *7. Hillis and Steele Algorithm #######################################
 void hAndSAlgo (int child_id, int m, int n, int** arr, int* barrArray, string B){
-int start = 0; 
-int end = 0;
-int remainder = n % m;
-int* arrnew = (int *) arr;
-
-int x = ceil(log2(n));  // algorithm 'n' == processes
- if( n == m){
-   int arrSeg = n/m;
-   start = child_id * arrSeg;
-   end = (child_id == m -1) ? n : start + arrSeg;
- }
- else if (n < m){
-   m = n;
-   int arrSeg = n/m;
-   start = child_id * arrSeg;
-   end = (child_id == m -1) ? n : start + arrSeg;
- }
- else if (n > m && remainder == 0){
-   int arrSeg = n/m;
-   start = child_id * arrSeg;
-   end = (child_id == m -1) ? n : start + arrSeg;
- }
- //else if (n > m && remainder != 0){  }
-
-for(int p = 1;p <= x; p++){
+  int start = 0; 
+  int end = 0;
+  int remainder = n % m;
+  int* arrnew = (int *) arr;
+  //int workloads[m];
+  int x = ceil(log2(n));  // algorithm 'n' == processes
+  if( n == m){
+    int arrSeg = n/m;
+    start = child_id * arrSeg;
+    end = (child_id == m -1) ? n : start + arrSeg;
+    for(int p = 1;p <= x; p++){
   
-  for(int i = start; i < end; i++){ 
-    if(i < pow(2, p-1)){
-     *(arrnew + (p*n) + i) = *(arrnew + (p-1)*n + i);
+      for(int i = start; i < end; i++){ 
+	if(i < pow(2, p-1)){
+	  *(arrnew + (p*n) + i) = *(arrnew + (p-1)*n + i);
+	}
+	else{
+	  int y = pow(2, p-1);
+	  *(arrnew + p*n + i) = *(arrnew + (p-1)*n + (i-y)) + *(arrnew + (p-1)*n + i);
+	}
+      }
+      arriveAndWait(barrArray,m,child_id); // calls the barrier array function
     }
-    else{
-     int y = pow(2, p-1);
-     *(arrnew + p*n + i) = *(arrnew + (p-1)*n + (i-y)) + *(arrnew + (p-1)*n + i);
+  } 
+  else if (n > m && remainder == 0){
+    int arrSeg = n/m;
+    start = child_id * arrSeg;
+    end = (child_id == m -1) ? n : start + arrSeg;
+    for(int p = 1;p <= x; p++){
+  
+      for(int i = start; i < end; i++){ 
+	if(i < pow(2, p-1)){
+	  *(arrnew + (p*n) + i) = *(arrnew + (p-1)*n + i);
+	}
+	else{
+	  int y = pow(2, p-1);
+	  *(arrnew + p*n + i) = *(arrnew + (p-1)*n + (i-y)) + *(arrnew + (p-1)*n + i);
+	}
+      }
+      arriveAndWait(barrArray,m,child_id); // calls the barrier array function
     }
   }
-  arriveAndWait(barrArray,m,child_id); // calls the barrier array function
- }
+/*  else if (n > m && remainder != 0){ 
+    int arrSeg = n/m;
+    for (int i = 0; i < m; ++i){
+      if(i < remainder ){
+	workloads[i] = arrSeg + remainder;
+	
 
+      }
+      
+      else {
+	workloads[i] = arrSeg;
+	
+      }
+	
+    }
+    for(int p = 1;p <= x; p++){
+  
+      for(int i = start; i < end; i++){ 
+	if(i < pow(2, p-1)){
+	  *(arrnew + (p*n) + i) = *(arrnew + (p-1)*n + i);
+	}
+	else{
+	  int y = pow(2, p-1);
+	  *(arrnew + p*n + i) = *(arrnew + (p-1)*n + (i-y)) + *(arrnew + (p-1)*n + i);
+	}
+      }
+      arriveAndWait(barrArray,m,child_id); // calls the barrier array function
+    }
 
- cout << endl;
-ofstream output;
+  }*/
+
+  cout << endl;
+  ofstream output;
   output.open(B);
   if (!output) {
     perror("Unable to open file");
@@ -190,7 +224,6 @@ ofstream output;
   }
   output << "}\n";
   output.close();
-
 }
 
 //## *8. Barrier Algorithm #################################################
@@ -205,7 +238,10 @@ int arriveAndWait(int *barrArray, int m, int child_id) {
 
 //## *Process forking function #############################################
 void forkProcesses(int n, int m, pid_t* shared_pid, int** algoArray, int* barrArray, string B) {
-    for (int i = 0; i < m; ++i) {
+    if (n < m){
+      int m = n;
+
+      for (int i = 0; i < m; ++i) {
         pid_t pid = fork();
 
         if (pid < 0) {
@@ -218,10 +254,29 @@ void forkProcesses(int n, int m, pid_t* shared_pid, int** algoArray, int* barrAr
             // Update the shared memory with the current child's PID
             _exit(0); // Exit to prevent child from forking again
         }
-	
     }
     for(int i = 0; i < m; ++i){
       wait(NULL);
+    }
+    }
+    else{
+      for (int i = 0; i < m; ++i) {
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            cerr << "Fork failed: " << strerror(errno) << endl;
+            exit(1);
+        } else if (pid == 0) {
+            // Child process
+            cout << "This is child process " << i << " with PID " << getpid() << " and previous PID " << *shared_pid << endl;
+	    hAndSAlgo(i,m,n,algoArray,barrArray,B);
+            // Update the shared memory with the current child's PID
+            _exit(0); // Exit to prevent child from forking again
+        }
+    }
+    for(int i = 0; i < m; ++i){
+      wait(NULL);
+    }
     }
 }
 void errormsg( char *msg ) {
